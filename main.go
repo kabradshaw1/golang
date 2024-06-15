@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -27,4 +28,11 @@ func main() {
 	}
 
 	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("HTTP Status Code: %d\nBody: %v", response.StatusCode, string(body))
 }
