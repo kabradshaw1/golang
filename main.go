@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"net/url"
 	"os"
 )
@@ -18,4 +20,11 @@ func main() {
 		fmt.Printf("Invalid URL %s\n", err)
 		os.Exit(1)
 	}
+
+	response, err := http.Get(args[1])
+	if err != nil {
+		log.Fatal((err))
+	}
+
+	defer response.Body.Close()
 }
