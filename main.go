@@ -9,6 +9,14 @@ import (
 	"os"
 )
 
+// {"page":"words","input":"","words":[]}
+
+type Words struct {
+	Page  string   `json:"page"`
+	Input string   `json:"input"`
+	Word  []string `json:"words"`
+}
+
 func main() {
 	args := os.Args
 
@@ -34,5 +42,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("HTTP Status Code: %d\nBody: %v", response.StatusCode, string(body))
+	fmt.Printf("HTTP Status Code: %d\nBody: %s", response.StatusCode, body)
 }
