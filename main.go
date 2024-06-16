@@ -1,20 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
-
-// {"page":"words","input":"","words":[]}
 
 type Words struct {
 	Page  string   `json:"page"`
 	Input string   `json:"input"`
-	Word  []string `json:"words"`
+	Words []string `json:"words"`
 }
 
 func main() {
@@ -31,8 +31,9 @@ func main() {
 	}
 
 	response, err := http.Get(args[1])
+
 	if err != nil {
-		log.Fatal((err))
+		log.Fatal(err)
 	}
 
 	defer response.Body.Close()
@@ -42,5 +43,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("HTTP Status Code: %d\nBody: %s", response.StatusCode, body)
+	if response.StatusCode != 200 {
+		fmt.Printf("Invalid outpuit (HTTP Code %d): %s\n", response.StatusCode, body)
+	}
+
+	var words Words
+
+	err = json.Unmarshal(body, &words)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("JSON Parsed\nPage: %s\nWords: %v", words.Page, strings.Join(words.Words, ", "))
 }
