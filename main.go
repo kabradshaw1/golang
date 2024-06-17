@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 type Response interface {
@@ -22,10 +23,21 @@ type Words struct {
 	Words []string `json:"words"`
 }
 
+func (w Words) GetResponse() string {
+	return fmt.Sprintf("Words: %s", strings.Join(w.Words, ", "))
+}
+
 type Occurrence struct {
 	Words map[string]int `json:"words"`
 }
 
+func (o Occurrence) GetResponse() string {
+	out := []string{}
+	for word, occurrence := range o.Words {
+		out = append(out, fmt.Sprintf("%s (%d)", word, occurrence))
+	}
+	return fmt.Sprintf("Words: %s", strings.Join(out, ", "))
+}
 func main() {
 	args := os.Args
 
@@ -56,7 +68,7 @@ func doRequest(requestURL string) (Response, error) {
 	response, err := http.Get(requestURL)
 
 	if err != nil {
-		return nil, fmt.Errorf("http get error: %s", err)
+		return nil, fmt.Errorf("http Get error: %s", err)
 	}
 
 	defer response.Body.Close()
@@ -95,7 +107,6 @@ func doRequest(requestURL string) (Response, error) {
 
 		return occurrence, nil
 
-		return nil, nil
 	}
-
+	return nil, nil
 }
