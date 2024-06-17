@@ -5,3 +5,7 @@ type RequestError struct {
 	Body     string
 	Err      string
 }
+
+func (r RequestError) Error() string {
+	return r.Err
+}
