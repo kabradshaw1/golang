@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -40,17 +41,38 @@ func (o Occurrence) GetResponse() string {
 }
 
 func main() {
-	args := os.Args
+	var (
+		requestURL string
+		password   string
+		parsedURL  *url.URL
+		err        error
+	)
 
-	if len(args) < 2 {
-		fmt.Printf("Usage: ./http-get <url>\n")
+	flag.StringVar(&requestURL, "url", "", "url to access")
+	flag.StringVar(&password, "password", "", "password to access")
+
+	flag.Parse()
+
+	if parsedURL, err = url.ParseRequestURI(requestURL); err != nil {
+		fmt.Printf("validation error: URL is not valid: %s\nUseage: ./http-get -h\n ", err)
+		flag.Usage()
 		os.Exit(1)
 	}
 
-	res, err := doRequest(args[1])
+	if password != "" {
+		token, err := doLoginRequest(parsedURL.Scheme+"://"+parsedURL.Host+"/login", password)
+		if requestErr, ok := err.(RequestError); ok {
+			fmt.Printf("Error occurred: %s (HTTP Error: %d, Body: %s)\n", requestErr.Error(), requestErr.HTTPCode, requestErr.Body)
+			os.Exit(1)
+		}
+		fmt.Printf("Token: %s\n", token)
+		os.Exit(0)
+	}
+
+	res, err := doRequest(parsedURL.String())
 	if err != nil {
 		if requestErr, ok := err.(RequestError); ok {
-			fmt.Printf("Request error: %s, Code: %d, Body: %s\n", requestErr.Err, requestErr.HTTPCode, requestErr.Body)
+			fmt.Printf("Error occurred: %s (HTTP Error: %d, Body: %s)\n", requestErr.Error(), requestErr.HTTPCode, requestErr.Body)
 			os.Exit(1)
 		}
 		fmt.Printf("Error occurred: %s\n", err)
@@ -64,11 +86,6 @@ func main() {
 }
 
 func doRequest(requestURL string) (Response, error) {
-
-	if _, err := url.ParseRequestURI(requestURL); err != nil {
-		fmt.Printf("Usage: ./http-get <url>\n\nURL is not valid URL: %s\n", requestURL)
-		os.Exit(1)
-	}
 
 	response, err := http.Get(requestURL)
 
@@ -88,21 +105,22 @@ func doRequest(requestURL string) (Response, error) {
 		return nil, fmt.Errorf("invalid output (HTTP Code %d): %s", response.StatusCode, string(body))
 	}
 
+	var page Page
+
 	if !json.Valid(body) {
 		return nil, RequestError{
+			Err:      "response is not a json",
 			HTTPCode: response.StatusCode,
 			Body:     string(body),
-			Err:      fmt.Sprintf("No valid JSON"),
 		}
 	}
-	var page Page
 
 	err = json.Unmarshal(body, &page)
 	if err != nil {
 		return nil, RequestError{
+			Err:      fmt.Sprintf("Page unmarshal error: %s", err),
 			HTTPCode: response.StatusCode,
 			Body:     string(body),
-			Err:      fmt.Sprintf("Page unmarshal error: %s", err),
 		}
 	}
 
@@ -111,11 +129,7 @@ func doRequest(requestURL string) (Response, error) {
 		var words Words
 		err = json.Unmarshal(body, &words)
 		if err != nil {
-			return nil, RequestError{
-				HTTPCode: response.StatusCode,
-				Body:     string(body),
-				Err:      fmt.Sprintf("Words unmarshal error: %s", err),
-			}
+			return nil, fmt.Errorf("Words unmarshal error: %s", err)
 		}
 
 		return words, nil
@@ -123,11 +137,7 @@ func doRequest(requestURL string) (Response, error) {
 		var occurrence Occurrence
 		err = json.Unmarshal(body, &occurrence)
 		if err != nil {
-			return nil, RequestError{
-				HTTPCode: response.StatusCode,
-				Body:     string(body),
-				Err:      fmt.Sprintf("Occurrence unmarshal error: %s", err),
-			}
+			return nil, fmt.Errorf("Occurrence unmarshal error: %s", err)
 		}
 
 		return occurrence, nil
