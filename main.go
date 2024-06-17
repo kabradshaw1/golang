@@ -55,6 +55,7 @@ func main() {
 		fmt.Printf("Invalid output (HTTP Code %d): %s\n", response.StatusCode, string(body))
 		os.Exit(1)
 	}
+
 	var page Page
 
 	err = json.Unmarshal(body, &page)
@@ -64,9 +65,7 @@ func main() {
 
 	switch page.Name {
 	case "words":
-
 		var words Words
-
 		err = json.Unmarshal(body, &words)
 		if err != nil {
 			log.Fatal(err)
@@ -74,18 +73,19 @@ func main() {
 		fmt.Printf("JSON: Parsed:\nPage: %s\nWords: %s\n", page.Name, strings.Join(words.Words, ", "))
 	case "occurrence":
 		var occurrence Occurrence
-
 		err = json.Unmarshal(body, &occurrence)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		if val, ok := occurrence.Words["word1"]; ok {
+		if val, ok := occurrence.Words["word5"]; ok {
 			fmt.Printf("Found word1: %d\n", val)
 		}
-		for word, occurence := range occurrence.Words {
-			fmt.Printf("%s: %d\n", word, occurence)
+
+		for word, occurrence := range occurrence.Words {
+			fmt.Printf("%s: %d\n", word, occurrence)
 		}
+
 	default:
 		fmt.Printf("Page not found\n")
 	}

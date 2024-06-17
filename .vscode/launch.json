@@ -8,9 +8,6 @@
           "mode": "auto",
           "program": "${workspaceFolder}",
           "args": ["word1"],
-          "env": {},
-          "cwd": "${workspaceFolder}",
-          "console": "integratedTerminal"
       }
   ]
 }
