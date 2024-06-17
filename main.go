@@ -1,59 +1,36 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"net/http"
-	"net/url"
-	"os"
-	"strings"
 )
 
-type Words struct {
-	Page  string   `json:"page"`
-	Input string   `json:"input"`
-	Words []string `json:"words"`
+type MySlowReader struct {
+	contents string
+	pos      int
+}
+
+func (m MySlowReader) Read(p []byte) (n int, err error) {
+	if m.pos+1 <= len(m.contents) {
+		n := copy(p, m.contents[m.pos:m.pos+1])
+		m.pos++
+		return n, nil
+	}
+	return 0, io.EOF
 }
 
 func main() {
-	args := os.Args
 
-	if len(args) < 2 {
-		fmt.Printf("Usage: ./http-get <url>\n")
-		os.Exit(1)
+	mySlowerReaderInstance := MySlowReader{
+		contents: "Hello World",
 	}
 
-	if _, err := url.ParseRequestURI(args[1]); err != nil {
-		fmt.Printf("Invalid URL %s\n", err)
-		os.Exit(1)
-	}
-
-	response, err := http.Get(args[1])
+	out, err := io.ReadAll(mySlowerReaderInstance)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if response.StatusCode != 200 {
-		fmt.Printf("Invalid outpuit (HTTP Code %d): %s\n", response.StatusCode, body)
-	}
-
-	var words Words
-
-	err = json.Unmarshal(body, &words)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("JSON Parsed\nPage: %s\nWords: %v", words.Page, strings.Join(words.Words, ", "))
+	fmt.Printf("output: %s\n", out)
 }
