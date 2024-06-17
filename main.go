@@ -10,12 +10,12 @@ import (
 	"strings"
 )
 
-type Response interface {
-	GetResponse() string
-}
-
 type Page struct {
 	Name string `json:"page"`
+}
+
+type Response interface {
+	GetResponse() string
 }
 
 type Words struct {
@@ -32,12 +32,13 @@ type Occurrence struct {
 }
 
 func (o Occurrence) GetResponse() string {
-	out := []string{}
+	words := []string{}
 	for word, occurrence := range o.Words {
-		out = append(out, fmt.Sprintf("%s (%d)", word, occurrence))
+		words = append(words, fmt.Sprintf("%s (%d)", word, occurrence))
 	}
-	return fmt.Sprintf("Words: %s", strings.Join(out, ", "))
+	return fmt.Sprintf("Words: %s", strings.Join(words, ", "))
 }
+
 func main() {
 	args := os.Args
 
@@ -51,24 +52,24 @@ func main() {
 		fmt.Printf("Error occurred: %s\n", err)
 		os.Exit(1)
 	}
-
 	if res == nil {
 		fmt.Printf("No response\n")
 		os.Exit(1)
 	}
-
 	fmt.Printf("Response: %s\n", res.GetResponse())
 }
 
 func doRequest(requestURL string) (Response, error) {
+
 	if _, err := url.ParseRequestURI(requestURL); err != nil {
-		return nil, fmt.Errorf("Validation error, URL is not valid: %s", err)
+		fmt.Printf("Usage: ./http-get <url>\n\nURL is not valid URL: %s\n", requestURL)
+		os.Exit(1)
 	}
 
 	response, err := http.Get(requestURL)
 
 	if err != nil {
-		return nil, fmt.Errorf("http Get error: %s", err)
+		return nil, fmt.Errorf("get error: %s", err)
 	}
 
 	defer response.Body.Close()
@@ -80,7 +81,7 @@ func doRequest(requestURL string) (Response, error) {
 	}
 
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("Invalid output (HTTP Code %d): %s\n", response.StatusCode, string(body))
+		return nil, fmt.Errorf("invalid output (HTTP Code %d): %s", response.StatusCode, string(body))
 	}
 
 	var page Page
@@ -97,6 +98,7 @@ func doRequest(requestURL string) (Response, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal error: %s", err)
 		}
+
 		return words, nil
 	case "occurrence":
 		var occurrence Occurrence
@@ -106,7 +108,7 @@ func doRequest(requestURL string) (Response, error) {
 		}
 
 		return occurrence, nil
-
 	}
+
 	return nil, nil
 }
