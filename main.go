@@ -12,7 +12,7 @@ import (
 )
 
 type Page struct {
-	Name string `json:"name"`
+	Name string `json:"page"`
 }
 
 type Words struct {
@@ -20,7 +20,7 @@ type Words struct {
 	Words []string `json:"words"`
 }
 
-type Occurence struct {
+type Occurrence struct {
 	Words map[string]int `json:"words"`
 }
 
@@ -72,18 +72,18 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Printf("JSON: Parsed:\nPage: %s\nWords: %s\n", page.Name, strings.Join(words.Words, ", "))
-	case "occurence":
-		var occurence Occurence
+	case "occurrence":
+		var occurrence Occurrence
 
-		err = json.Unmarshal(body, &occurence)
+		err = json.Unmarshal(body, &occurrence)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		if val, ok := occurence.Words["word1"]; ok {
+		if val, ok := occurrence.Words["word1"]; ok {
 			fmt.Printf("Found word1: %d\n", val)
 		}
-		for word, occurence := range occurence.Words {
+		for word, occurence := range occurrence.Words {
 			fmt.Printf("%s: %d\n", word, occurence)
 		}
 	default:
