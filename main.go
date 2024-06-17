@@ -79,6 +79,13 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		if val, ok := occurence.Words["word1"]; ok {
+			fmt.Printf("Found word1: %d\n", val)
+		}
+		for word, occurence := range occurence.Words {
+			fmt.Printf("%s: %d\n", word, occurence)
+		}
 	default:
 		fmt.Printf("Page not found\n")
 	}
