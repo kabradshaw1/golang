@@ -47,27 +47,26 @@ func main() {
 		parsedURL  *url.URL
 		err        error
 	)
-
 	flag.StringVar(&requestURL, "url", "", "url to access")
-	flag.StringVar(&password, "password", "", "password to access")
+	flag.StringVar(&password, "password", "", "use a password to access our api")
 
 	flag.Parse()
 
 	if parsedURL, err = url.ParseRequestURI(requestURL); err != nil {
-		fmt.Printf("validation error: URL is not valid: %s\nUseage: ./http-get -h\n ", err)
-		flag.Usage()
+		fmt.Printf("Help: ./http-get -h\nURL is not valid URL: %s\n", requestURL)
 		os.Exit(1)
 	}
 
 	client := http.Client{}
+
 	if password != "" {
 		token, err := doLoginRequest(client, parsedURL.Scheme+"://"+parsedURL.Host+"/login", password)
 		if err != nil {
 			if requestErr, ok := err.(RequestError); ok {
-				fmt.Printf("Error occurred: %s (HTTP Error: %d, Body: %s)\n", requestErr.Error(), requestErr.HTTPCode, requestErr.Body)
+				fmt.Printf("Login failed: %s (HTTP Error: %d, Body: %s)\n", requestErr.Error(), requestErr.HTTPCode, requestErr.Body)
 				os.Exit(1)
 			}
-			fmt.Printf("Error occurred: %s\n", err)
+			fmt.Printf("Login failed: %s\n", err)
 			os.Exit(1)
 		}
 		client.Transport = MyJWTTransport{
@@ -97,7 +96,7 @@ func doRequest(client http.Client, requestURL string) (Response, error) {
 	response, err := client.Get(requestURL)
 
 	if err != nil {
-		return nil, fmt.Errorf("get error: %s", err)
+		return nil, fmt.Errorf("Get error: %s", err)
 	}
 
 	defer response.Body.Close()
@@ -109,14 +108,14 @@ func doRequest(client http.Client, requestURL string) (Response, error) {
 	}
 
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("invalid output (HTTP Code %d): %s", response.StatusCode, string(body))
+		return nil, fmt.Errorf("Invalid output (HTTP Code %d): %s\n", response.StatusCode, string(body))
 	}
 
 	var page Page
 
 	if !json.Valid(body) {
 		return nil, RequestError{
-			Err:      "response is not a json",
+			Err:      fmt.Sprintf("Response is not a json"),
 			HTTPCode: response.StatusCode,
 			Body:     string(body),
 		}
