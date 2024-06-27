@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"helloword/pkg/api"
+	"helloworld/pkg/api"
 	"net/http"
 	"net/url"
 	"os"
@@ -28,13 +28,12 @@ func main() {
 
 	apiInstance := api.New(api.Options{
 		Password: password,
-		LoginURL: parses
+		LoginURL: parsedURL.Scheme + "://" + parsedURL.Host + "/login",
 	})
-	client := http.Client{}
 
-	res, err := doRequest(client, parsedURL.String())
+	res, err := apiInstance.DoGetRequest(parsedURL.String())
 	if err != nil {
-		if requestErr, ok := err.(RequestError); ok {
+		if requestErr, ok := err.(api.RequestError); ok {
 			fmt.Printf("Error occurred: %s (HTTP Error: %d, Body: %s)\n", requestErr.Error(), requestErr.HTTPCode, requestErr.Body)
 			os.Exit(1)
 		}

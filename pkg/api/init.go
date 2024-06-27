@@ -7,6 +7,7 @@ type Options struct {
 	LoginURL string
 }
 type APIIface interface {
+	DoGetRequest(requestURL string) (Response, error)
 }
 
 type API struct {
