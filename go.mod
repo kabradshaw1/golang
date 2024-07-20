@@ -1,3 +1,3 @@
-module helloworld
+module github.com/wardviaene/golang-for-devops-course/http-login-packaged
 
-go 1.22.4
+go 1.18

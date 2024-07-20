@@ -11,25 +11,24 @@ import (
 type LoginRequest struct {
 	Password string `json:"password"`
 }
-
 type LoginResponse struct {
 	Token string `json:"token"`
 }
 
-func doLoginRequest(client http.Client, requestURL string, password string) (string, error) {
+func doLoginRequest(client http.Client, requestURL, password string) (string, error) {
 	loginRequest := LoginRequest{
 		Password: password,
 	}
 
-	body, err := json.Marshal((loginRequest))
+	body, err := json.Marshal(loginRequest)
 	if err != nil {
-		return "", fmt.Errorf("json.Marshal error: %s", err)
+		return "", fmt.Errorf("Marshal error: %s", err)
 	}
 
 	response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
 
 	if err != nil {
-		return "", fmt.Errorf("post error: %s", err)
+		return "", fmt.Errorf("http Post error: %s", err)
 	}
 
 	defer response.Body.Close()
@@ -41,14 +40,14 @@ func doLoginRequest(client http.Client, requestURL string, password string) (str
 	}
 
 	if response.StatusCode != 200 {
-		return "", fmt.Errorf("invalid output (HTTP Code %d): %s", response.StatusCode, string(body))
+		return "", fmt.Errorf("Invalid output (HTTP Code %d): %s\n", response.StatusCode, string(resBody))
 	}
 
 	if !json.Valid(resBody) {
 		return "", RequestError{
-			Err:      "response is not a json",
 			HTTPCode: response.StatusCode,
 			Body:     string(resBody),
+			Err:      fmt.Sprintf("No valid JSON returned"),
 		}
 	}
 
@@ -57,18 +56,18 @@ func doLoginRequest(client http.Client, requestURL string, password string) (str
 	err = json.Unmarshal(resBody, &loginResponse)
 	if err != nil {
 		return "", RequestError{
-			Err:      fmt.Sprintf("Page unmarshal error: %s", err),
 			HTTPCode: response.StatusCode,
 			Body:     string(resBody),
+			Err:      fmt.Sprintf("Page unmarshal error: %s", err),
 		}
 	}
 
 	if loginResponse.Token == "" {
 		return "", RequestError{
 			HTTPCode: response.StatusCode,
-
-			Body: string(resBody),
-			Err:  "empty token"}
+			Body:     string(resBody),
+			Err:      "Empty token replied",
+		}
 	}
 
 	return loginResponse.Token, nil

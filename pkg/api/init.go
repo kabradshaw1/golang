@@ -2,24 +2,29 @@ package api
 
 import "net/http"
 
+type ClientIface interface {
+	Get(url string) (resp *http.Response, err error)
+}
+
 type Options struct {
 	Password string
 	LoginURL string
 }
+
 type APIIface interface {
 	DoGetRequest(requestURL string) (Response, error)
 }
 
-type API struct {
+type api struct {
 	Options Options
-	Client  http.Client
+	Client  ClientIface
 }
 
 func New(options Options) APIIface {
-	return API{
+	return api{
 		Options: options,
-		Client: http.Client{
-			Transport: MyJWTTransport{
+		Client: &http.Client{
+			Transport: &MyJWTTransport{
 				transport: http.DefaultTransport,
 				password:  options.Password,
 				loginURL:  options.LoginURL,

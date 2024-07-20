@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"helloworld/pkg/api"
-	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/wardviaene/golang-for-devops-course/http-login-packaged/pkg/api"
 )
 
 func main() {
